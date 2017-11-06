@@ -16,6 +16,7 @@
 #include <BLETypedCharacteristics.h>
 
 //#define MAX_SW_SERIAL 9600//57600
+//#define DEBUG_LOGS 1
 
 const int ledPin    = 13; // set ledPin to use on-board LED
 const int resetPin  = 9;
@@ -23,8 +24,12 @@ const int pulseTime = 8;
 
 const int gsmRX     = 2; // 0 for hardware UART, 2 software UART
 const int gsmTX     = 3; // 1 for hardware UART, 3 software UART
+const int gsmEN     = 10;
+
 const int gpsRX     = 8; // 0 for hardware UART, 8 software UART
 const int gpsTX     = 9; // 1 for hardware UART, 9 software UART
+const int gpsEN     = 11;
+
 const int gxxReset  = 6;
 const int gxxOnOff  = 7;
 
@@ -197,6 +202,22 @@ void loop() {
   //con.println(nmea.isValid() ? "yes" : "no");
   
   BLE.poll();
+}
+
+bool checkModuleOn() {
+  if (checkGPSsetup() || checkGSMsetup() {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+bool checkGPSsetup() {
+    
+}
+
+bool checkGSMsetup() {
+  
 }
 
 void blePeripheralConnectHandler(BLEDevice central) {
