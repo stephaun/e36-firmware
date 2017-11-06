@@ -15,7 +15,7 @@
 #include <BLECharacteristic.h>
 #include <BLETypedCharacteristics.h>
 
-//#define MAX_SW_SERIAL 9600//57600
+#define MAX_SW_SERIAL 57600
 //#define DEBUG_LOGS 1
 
 const int ledPin    = 13; // set ledPin to use on-board LED
@@ -33,10 +33,10 @@ const int gpsEN     = 11;
 const int gxxReset  = 6;
 const int gxxOnOff  = 7;
 
-HardwareSerial& con = Serial;
-HardwareSerial& gps = Serial1;
-//SoftwareSerial  gsm(gsmRX, gsmTX);
-//SoftwareSerial  gps(gpsRX, gpsTX);
+HardwareSerial& con = Serial;   // Console interface to Braswell
+HardwareSerial& hws = Serial1;  // Serial interface on pins 0 & 1 
+SoftwareSerial  gsm(gsmRX, gsmTX);
+SoftwareSerial  gps(gpsRX, gpsTX);
 
 char nmeaBuffer[128];
 MicroNMEA nmea(nmeaBuffer, sizeof(nmeaBuffer));
@@ -47,46 +47,46 @@ void printUnknownSentence(MicroNMEA& nmea) {
   con.println(nmea.getSentence());
 }
 
-//void gpsHardwareReset() {
-//  // Empty input buffer
-//  while (gps.available()) gps.read();
-//  
-//  // digitalWrite(A0, LOW);
-//  // delay(50);
-//  // digitalWrite(A0, HIGH);
-//
-//  // Reset is complete when the first valid message is received
-//  while (1) {
-//    while (gps.available()) {
-//      char c = gps.read();
-//      if (nmea.process(c)) return;
-//    }
-//  }
-//}
-
 BLEService ledService("a14a0000-cd9c-4a64-90ee-28b22f978bcd");
 BLECharCharacteristic switchChar("a14a0001-cd9c-4a64-90ee-28b22f978bcd", BLERead | BLEWrite);
 
 void setup() {
-  while (!con) ;  // Required for Arduino 101 to finish booting;
-                  // so we dont miss serial data after a reset.
+  pinMode(gpsEN, OUTPUT);
+  digitalWrite(gpsEN, LOW);
+  pinMode(gsmEN, OUTPUT);
+  digitalWrite(gsmEN, LOW);
   
-  con.begin(9600);
-  gps.begin(115200);
-  pinMode(ledPin, OUTPUT);
   pinMode(resetPin, OUTPUT);
   digitalWrite(resetPin, HIGH);
+  pinMode(ledPin, OUTPUT);
+  digitalWrite(ledPin, LOW);
 
   pinMode(gxxReset, OUTPUT);
   digitalWrite(gxxReset, LOW); // Dont reset.
   pinMode(gxxOnOff, OUTPUT);
   digitalWrite(gxxOnOff, LOW); // Dont turn on.
 
-  con.println("Resetting GPS module ...");
-  //gpsHardwareReset();
-    // Empty the input buffer.
-    while (gps.available()) gps.read();
-  con.println("... done");
+  
+  while (!con) ;  // Required for Arduino 101 to finish booting;
+                  // so we dont miss serial data after a reset.    
+  con.begin(9600);
+  hws.begin(115200);
+
+  con.println("Checking MG2639 module ...");
+  if (!checkModuleOn()) { 
+    con.println("It's not on... enabling now.");
+    if (turnModuleOn()) {
+      con.println("Successfully turned the module on...");
+    } else {
+      con.println("Failed to turn the module on...");
+      // return an error message to Braswell
+      // Setup a timer to automatically retry every 10 seconds.
+    } 
+  }
+  
+  // Empty the input buffer.
+  //  while (gps.available()) gps.read();
+  //con.println("... done");
 
   // Clear the list of messages which are sent.
 //  MicroNMEA::sendSentence(gps, "$PORZB");
@@ -97,24 +97,7 @@ void setup() {
 //  MicroNMEA::sendSentence(gps, "$PNVGNME,2,9,1");
   // MicroNMEA::sendSentence(gps, "$PONME,2,4,1,0");
 
-
-
-//  if (!initMG2639()) {
-//    con.println("Module failed to respond. Hanging.");
-//    while(1) {
-//      if (con.available()) {
-//        //gsm.write(con.read());
-//        sendCommand(String("+ATI"));
-//      }
-//      if (gsm.available()) {
-//        con.write(gsm.read());
-//        
-//      }
-//    }
-//  } else {
-//    con.println("MG2639 Module is online!"); 
-//  }
-
+  con.println("Setting up the Bluetooth interface!");
   BLE.begin();
   BLE.setLocalName("BMW_E36");
   BLE.setAdvertisedService(ledService);
@@ -129,15 +112,12 @@ void setup() {
   BLE.setEventHandler(BLEDisconnected, blePeripheralDisconnectHandler);
 
   BLE.advertise();
-  Serial.println("Bluetooth device active, waiting for connections...");
+  con.println("Bluetooth device active, waiting for connections...");
 }
 bool skip = true;
 
 void loop() {
-  // put your main code here, to run repeatedly:
-//  if (gpsMG2639.available()) {
-//    Serial.write(gpsMG2639.read()); 
-//  }
+
 
   while (gps.available()) {
     char c = gps.read();
@@ -212,8 +192,23 @@ bool checkModuleOn() {
   }
 }
 
+void enableGPStoHWuart() {
+  digitalWrite(gsmEN, LOW);
+  digitalWrite(gpsEN, HIGH);
+}
+
+void enableGSMtoHWuart() {
+  digitalWrite(gpsEN, LOW);
+  digitalWrite(gsmEN, HIGH);  
+}
+
 bool checkGPSsetup() {
+  enableGPStoHWuart();
+  if (hws.) {
     
+  } else {
+    
+  }      
 }
 
 bool checkGSMsetup() {
