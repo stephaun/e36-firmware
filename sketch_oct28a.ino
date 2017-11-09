@@ -185,12 +185,16 @@ void loop() {
 }
 
 bool checkModuleOn() {
-  if (checkGPSsetup() || checkGSMsetup() {
+  if (checkGPSsetup() || checkGSMsetup()) {
     return true;
   } else {
     return false;
   }
 }
+
+bool turnModuleOn() {
+  return true;  
+} 
 
 void enableGPStoHWuart() {
   digitalWrite(gsmEN, LOW);
@@ -203,16 +207,21 @@ void enableGSMtoHWuart() {
 }
 
 bool checkGPSsetup() {
-  enableGPStoHWuart();
-  if (hws.) {
-    
-  } else {
-    
-  }      
+//  enableGPStoHWuart();
+//  if (hws.) {
+//    
+//  } else {
+//    
+//  }      
 }
 
 bool checkGSMsetup() {
-  
+  enableGSMtoHWuart();
+  if (checkATOK()) {
+    return true;
+  } else {
+    return false;
+  }
 }
 
 void blePeripheralConnectHandler(BLEDevice central) {
@@ -286,13 +295,13 @@ void switchCharacteristicWritten(BLEDevice central, BLECharacteristic characteri
 //  return false;
 //}
 
-//bool checkATOK() {
-//  if (sendCommand("") == "OK") {
-//    return true;  
-//  } else {
-//    return false;  
-//  }
-//}
+bool checkATOK() {
+  if (sendCommand("") == "OK") {
+    return true;  
+  } else {
+    return false;  
+  }
+}
 
 //This sends a command and checks that the response is valid (not error)
 //This function is not pretty but it works. Improvments are welcomed.
@@ -311,134 +320,134 @@ void switchCharacteristicWritten(BLEDevice central, BLECharacteristic characteri
 #define ERROR_RESPONSE2  "REPONSE2ERROR"
 #define ERROR_RESPONSE3  "REPONSE3ERROR"
 
-//String sendCommand(String command) {
-//  String firstChunk; //No command should be longer than 20
-//  String secondChunk; //Not sure but responses can be large
-//  String thirdChunk; //Should always be 'OK' or empty
-//
-//  boolean breakFlag = false;
-//  int newlineCount = 0;
-//
-//  String strToSend = "AT" + command + "\r"; //Commands get sent with *only* a \r.
-//  //Adding a \n will cause the parser to break
-//
-//  con.print(F("Sending command: "));
-//  con.println(strToSend);
-//
-//  while(gsm.available()) gsm.read(); //Remove everything in the buffers
-//  gsm.print(strToSend); //Send this string to the module
-//
-//  for(byte x=0; x<100 ; x++) {
-//    if(gsm.available()) break; //Wait until we have some characters
-//    delay(1);
-//  }
-//    
-//  delay(55); //We need a few ms at 9600 to get. 15ms works well
-//
-//  while(breakFlag == false) {
-//    if(gsm.available() == false) return(ERROR_NOCHARACTERS); //This shouldn't happen
-//    char incoming = gsm.read();
-//
-//    switch(incoming) {
-//    case '\r':  // We're done!
-//        breakFlag = true;
-//        firstChunk += incoming;
-//        break;
-//    default:    // continue
-//        firstChunk += incoming;
-//        break;
-//    }
-//  }
-//
-//  //Serial.print("Chunk1: ");
-//  //Serial.println(firstChunk);
-//
-//  //First test
-//  if(firstChunk != strToSend) {
-//    con.print("Chunk1: ");
-//    con.println(firstChunk);
-//    return(ERROR_COMMAND_STRING_MISMATCH);
-//  }
-//
-//  //Reset the variables
-//  breakFlag = false;
-//  newlineCount = 0;
-//
-//  while(breakFlag == false) {
-//    if(gsm.available() == false) return(ERROR_NOCHARACTERS); //This shouldn't happen
-//    char incoming = gsm.read();
-//
-//    switch(incoming) {
-//    case '\r':  //Ignore it
-//        break;
-//    case '\n':
-//        newlineCount++;
-//        if(newlineCount == 1) {
-//          //Ignore it          
-//        } else if(newlineCount == 2) {
-//          //We're done!
-//          breakFlag = true;
-//          secondChunk += incoming;
-//        }
-//        break;
-//    default:
-//        secondChunk += incoming;
-//        break;
-//    }
-//  }
-//
-//  //Serial.print("Chunk2: ");
-//  //Serial.println(secondChunk);
-//
-//  //Second test
-//  if(secondChunk == "OK\n") {
-//    //We're ok, this command just doesn't return any data
-//    return("OK"); //Ignore trailing \n
-//  } else if (secondChunk == "ERROR") {
-//    //This might be an error
-//    return(ERROR_RESPONSE2);
-//  }
-//
-//  //Reset the variables
-//  breakFlag = false;
-//  newlineCount = 0;
-//
-//  while(breakFlag == false) {
-//    if(gsm.available() == false) return(ERROR_NOCHARACTERS); //This shouldn't happen
-//    char incoming = gsm.read();
-//
-//    switch(incoming) {
-//    case '\r': //Ignore it
-//        break;
-//    case '\n':
-//        newlineCount++;
-//        if(newlineCount == 1) {
-//          //Ignore it          
-//        } else if(newlineCount == 2) {
-//          //We're done!
-//          breakFlag = true;
-//          //thirdChunk += incoming; //Ignore the final \n
-//        }
-//        break;
-//    default:
-//        thirdChunk += incoming;
-//        break;
-//    }
-//  }
-//
-//  if(thirdChunk == "OK") {
-//    //We're so good!
-//    command.replace("?", ""); //Some commands (+CREG?) use ? but reponses do not have them. This removes the ? from the command
-//    //Now remove the original command from the response. 
-//    //For example: +CSQ: 4, 99 should become " 4, 99"
-//    secondChunk.replace(command + ":", "");
-//    secondChunk.trim(); //Get rid of any leading white space
-//    return(secondChunk); //Report this chunk to the caller
-//  } else {
-//    //This is bad. Probably 'Error'
-//    con.print("Chunk 3: ");
-//    con.print(thirdChunk);
-//    return(ERROR_RESPONSE3);
-//  }
-//}
+String sendCommand(String command) {
+  String firstChunk; //No command should be longer than 20
+  String secondChunk; //Not sure but responses can be large
+  String thirdChunk; //Should always be 'OK' or empty
+
+  boolean breakFlag = false;
+  int newlineCount = 0;
+
+  String strToSend = "AT" + command + "\r"; //Commands get sent with *only* a \r.
+  //Adding a \n will cause the parser to break
+
+  con.print(F("Sending command: "));
+  con.println(strToSend);
+
+  while(gsm.available()) gsm.read(); //Remove everything in the buffers
+  gsm.print(strToSend); //Send this string to the module
+
+  for(byte x=0; x<100 ; x++) {
+    if(gsm.available()) break; //Wait until we have some characters
+    delay(1);
+  }
+    
+  delay(55); //We need a few ms at 9600 to get. 15ms works well
+
+  while(breakFlag == false) {
+    if(gsm.available() == false) return(ERROR_NOCHARACTERS); //This shouldn't happen
+    char incoming = gsm.read();
+
+    switch(incoming) {
+    case '\r':  // We're done!
+        breakFlag = true;
+        firstChunk += incoming;
+        break;
+    default:    // continue
+        firstChunk += incoming;
+        break;
+    }
+  }
+
+  //Serial.print("Chunk1: ");
+  //Serial.println(firstChunk);
+
+  //First test
+  if(firstChunk != strToSend) {
+    con.print("Chunk1: ");
+    con.println(firstChunk);
+    return(ERROR_COMMAND_STRING_MISMATCH);
+  }
+
+  //Reset the variables
+  breakFlag = false;
+  newlineCount = 0;
+
+  while(breakFlag == false) {
+    if(gsm.available() == false) return(ERROR_NOCHARACTERS); //This shouldn't happen
+    char incoming = gsm.read();
+
+    switch(incoming) {
+    case '\r':  //Ignore it
+        break;
+    case '\n':
+        newlineCount++;
+        if(newlineCount == 1) {
+          //Ignore it          
+        } else if(newlineCount == 2) {
+          //We're done!
+          breakFlag = true;
+          secondChunk += incoming;
+        }
+        break;
+    default:
+        secondChunk += incoming;
+        break;
+    }
+  }
+
+  //Serial.print("Chunk2: ");
+  //Serial.println(secondChunk);
+
+  //Second test
+  if(secondChunk == "OK\n") {
+    //We're ok, this command just doesn't return any data
+    return("OK"); //Ignore trailing \n
+  } else if (secondChunk == "ERROR") {
+    //This might be an error
+    return(ERROR_RESPONSE2);
+  }
+
+  //Reset the variables
+  breakFlag = false;
+  newlineCount = 0;
+
+  while(breakFlag == false) {
+    if(gsm.available() == false) return(ERROR_NOCHARACTERS); //This shouldn't happen
+    char incoming = gsm.read();
+
+    switch(incoming) {
+    case '\r': //Ignore it
+        break;
+    case '\n':
+        newlineCount++;
+        if(newlineCount == 1) {
+          //Ignore it          
+        } else if(newlineCount == 2) {
+          //We're done!
+          breakFlag = true;
+          //thirdChunk += incoming; //Ignore the final \n
+        }
+        break;
+    default:
+        thirdChunk += incoming;
+        break;
+    }
+  }
+
+  if(thirdChunk == "OK") {
+    //We're so good!
+    command.replace("?", ""); //Some commands (+CREG?) use ? but reponses do not have them. This removes the ? from the command
+    //Now remove the original command from the response. 
+    //For example: +CSQ: 4, 99 should become " 4, 99"
+    secondChunk.replace(command + ":", "");
+    secondChunk.trim(); //Get rid of any leading white space
+    return(secondChunk); //Report this chunk to the caller
+  } else {
+    //This is bad. Probably 'Error'
+    con.print("Chunk 3: ");
+    con.print(thirdChunk);
+    return(ERROR_RESPONSE3);
+  }
+}
 
