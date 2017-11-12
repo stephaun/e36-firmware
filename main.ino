@@ -82,6 +82,9 @@ unsigned long lastGpsMillis = 0;
 unsigned long lastBluMillis = 0;
 
 void loop() {
+  #ifdef DEBUG
+    con.println("[MAIN] INFO: Begin");
+  #endif
 
     unsigned long currentMillis = millis();
     if (currentMillis - lastGsmMillis >= GSM_WATCH_TIME) {
@@ -113,4 +116,7 @@ void loop() {
       }
     }
 
+  #ifdef DEBUG
+    con.println("[MAIN] INFO: End");
+  #endif
 }
